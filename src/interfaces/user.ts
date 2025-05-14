@@ -4,7 +4,7 @@ export interface User {
   uid: string;
   firstName: string;
   lastName: string;
-  password: string;
+  password?: string;
   email: string;
   age: number;
   image: File;

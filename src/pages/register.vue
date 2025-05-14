@@ -1,7 +1,7 @@
 <template>
   <div class="full-width-container">
     <h1 class="form-title">Register</h1>
-    <form @submit.prevent="registerUser" class="register-form">
+    <form @submit.prevent="signUp" class="register-form">
       <!-- Left Column -->
       <div class="form-column left-column">
         <label>First name</label>
@@ -67,25 +67,14 @@
   </div>
 </template>
 <script setup lang="ts">
-import { app, auth, db } from "@/firebase";
 import { clearForm, user } from "@/interfaces/user";
-import router from "@/router";
-import { showAlert } from "@/utilis/alert";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { useAuthStore } from "@/store/auth";
 const handleImageUpload = (e) => {
  user.value.image = e.target.files[0];
 };
-const registerUser = async () => {
+const authStore = useAuthStore();
+const signUp = async () => {
   try {
-    // 1. Create user with email/password
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      user.value.email,
-      user.value.password
-    );
-    const firebaseUser = userCredential.user;
-    // 2. Upload image if exists
     let imageData = null;
     if (user.value.image) {
       const reader = new FileReader();
@@ -95,48 +84,80 @@ const registerUser = async () => {
       });
       
     }
-    const userDocRef = doc(db, "users", firebaseUser.uid);
-    await setDoc(userDocRef, {
-      uid: firebaseUser.uid,
-      firstName: user.value.firstName,
-      lastName: user.value.lastName,
-      age: user.value.age,
-      email: user.value.email,
-      image:imageData
-    });
-    showAlert({
-      title: "Success!",
-      icon: "success", // Now properly typed
-      text: "Operation completed successfully",
-      confirmButtonText: "ok",
-    }).then((result) => {
-      clearForm();
-      if (result.isConfirmed) {
-        router.push("/");
-      }
-    });
-
-    return firebaseUser;
-    // Redirect or show success message
+  const  newUser= {
+    firstName:  user.value.firstName,
+    lastName:  user.value.lastName,
+    age:  user.value.age,
+    email:  user.value.email,
+    password:  user.value.password,
+    image:  imageData,
+  };
+    await authStore.register(newUser);
   } catch (error) {
-    console.error("Registration error:", error.code, error.message);
-
-    if (error.code === "permission-denied") {
-      showAlert({
-        title: "Oops...",
-        icon: "error",
-        text: "Database permissions error. Contact support.",
-      });
-    } else if (error.code === "auth/email-already-in-use") {
-      showAlert({
-        title: "Oops...",
-        icon: "error",
-        text: "Email already in use.",
-      });
-    }
-    // Handle errors (show to user)
+  console.log("🚀 ~ signIn ~ error:", error)
   }
 };
+// const registerUser = async () => {
+//   try {
+//     // 1. Create user with email/password
+//     const userCredential = await createUserWithEmailAndPassword(
+//       auth,
+//       user.value.email,
+//       user.value.password
+//     );
+//     const firebaseUser = userCredential.user;
+//     // 2. Upload image if exists
+//     let imageData = null;
+//     if (user.value.image) {
+//       const reader = new FileReader();
+//       imageData = await new Promise((resolve) => {
+//         reader.onload = () => resolve(reader.result);
+//         reader.readAsDataURL(user.value.image);
+//       });
+      
+//     }
+//     const userDocRef = doc(db, "users", firebaseUser.uid);
+//     await setDoc(userDocRef, {
+//       uid: firebaseUser.uid,
+//       firstName: user.value.firstName,
+//       lastName: user.value.lastName,
+//       age: user.value.age,
+//       email: user.value.email,
+//       image:imageData
+//     });
+//     showAlert({
+//       title: "Success!",
+//       icon: "success", // Now properly typed
+//       text: "Operation completed successfully",
+//       confirmButtonText: "ok",
+//     }).then((result) => {
+//       clearForm();
+//       if (result.isConfirmed) {
+//         router.push("/");
+//       }
+//     });
+
+//     return firebaseUser;
+//     // Redirect or show success message
+//   } catch (error) {
+//     console.error("Registration error:", error.code, error.message);
+
+//     if (error.code === "permission-denied") {
+//       showAlert({
+//         title: "Oops...",
+//         icon: "error",
+//         text: "Database permissions error. Contact support.",
+//       });
+//     } else if (error.code === "auth/email-already-in-use") {
+//       showAlert({
+//         title: "Oops...",
+//         icon: "error",
+//         text: "Email already in use.",
+//       });
+//     }
+//     // Handle errors (show to user)
+//   }
+// };
 </script>
 <style scoped>
 .full-width-container {

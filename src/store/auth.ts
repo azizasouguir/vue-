@@ -5,17 +5,20 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  User,
+  
 } from "firebase/auth";
 import { auth, db } from "@/firebase"; // Your Firebase auth instance
 import router from "@/router";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { clearForm, User } from "@/interfaces/user";
+import { showAlert } from "@/utilis/alert";
 
 export const useAuthStore = defineStore("auth", () => {
-  // State
-  const user = ref(null);
-  const accessToken = ref(null);
-  const refreshToken = ref(null);
+  // State initialization with localStorage check
+  const user = ref<User>(JSON.parse(localStorage.getItem('user')));
+  console.log("🚀 ~ useAuthStore ~ user:", user);
+  const accessToken = ref(localStorage.getItem("accessToken") || null);
+  const refreshToken = ref(localStorage.getItem("refreshToken") || null);
   const loading = ref(false);
   const error = ref(null);
 
@@ -24,38 +27,54 @@ export const useAuthStore = defineStore("auth", () => {
   const currentUser = computed(() => user.value);
   const getAccessToken = computed(() => accessToken.value);
   const getRefreshToken = computed(() => refreshToken.value);
-
   // Actions
-  // const init = () => {
-  //   loading.value = true;
-  //   onAuthStateChanged(auth, (firebaseUser) => {
-  //     console.log("🚀 ~ onAuthStateChanged ~ firebaseUser:", firebaseUser)
-  //     if (firebaseUser) {
-  //       user.value = firebaseUser;
-  //     } else {
-  //       user.value = null;
-  //     }
-  //     loading.value = false;
-  //   });
-  // };
-
-  // const register = async (email, password) => {
-  //   try {
-  //     loading.value = true;
-  //     error.value = null;
-  //     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  //     user.value = {
-  //       uid: userCredential.user.uid,
-  //       email: userCredential.user.email
-  //     };
-  //     router.push('/dashboard');
-  //   } catch (err) {
-  //     error.value = err.message;
-  //     throw err;
-  //   } finally {
-  //     loading.value = false;
-  //   }
-  // };
+  const register = async (newUser) => {
+    console.log("🚀 ~ register ~ newUser:", newUser);
+    try {
+      loading.value = true;
+      error.value = null;
+      const userCredential = await createUserWithEmailAndPassword(auth, newUser.email, newUser.password);
+      const firebaseUser = userCredential.user;
+      const userDocRef = doc(db, "users", firebaseUser.uid);
+      await setDoc(userDocRef, {
+        uid: firebaseUser.uid,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        age: newUser.age,
+        email: newUser.email,
+        image:newUser.image
+      });
+      showAlert({
+              title: "Success!",
+              icon: "success", // Now properly typed
+              text: "Operation completed successfully",
+              confirmButtonText: "ok",
+            }).then((result) => {
+              clearForm();
+              if (result.isConfirmed) {
+                router.push("/");
+              }
+            })
+    } catch (error) {
+      if (error.code === "permission-denied") {
+              showAlert({
+                title: "Oops...",
+                icon: "error",
+                text: "Database permissions error. Contact support.",
+              });
+            } else if (error.code === "auth/email-already-in-use") {
+              showAlert({
+                title: "Oops...",
+                icon: "error",
+                text: "Email already in use.",
+              });
+            }
+            // Handle errors (show to user)
+          }
+     finally {
+      loading.value = false;
+    }
+  };
   const clearAuthData = () => {
     user.value = null;
     accessToken.value = null;
@@ -99,18 +118,15 @@ export const useAuthStore = defineStore("auth", () => {
         email:userData.email,
         image: userData.image,
       };
-      console.log("🚀 ~ login ~ userData:",user.value)
-      console.log("🚀 ~ login ~ userData:", user.value)
       // 5. Persist to localStorage
       localStorage.setItem("accessToken", token);
       localStorage.setItem("refreshToken", userCredential.user.refreshToken);
-     
+      localStorage.setItem("user", JSON.stringify(user.value)); // Store user object
 
       // 6. Redirect to home
       router.push("/home");
     } catch (err) {
       error.value = err.message;
-      // clearAuthData();
       throw err;
     } finally {
       loading.value = false;
@@ -121,7 +137,7 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       loading.value = true;
       await signOut(auth);
-      user.value = null;
+      clearAuthData();
       router.push("/");
     } catch (err) {
       error.value = err.message;
@@ -130,19 +146,14 @@ export const useAuthStore = defineStore("auth", () => {
       loading.value = false;
     }
   };
-
-  // // Initialize auth state when store is created
-  // init();
-
   return {
     user,
     loading,
     error,
     isAuthenticated,
     currentUser,
-    // register,
+    register,
     login,
     logout,
-    // init,
   };
 });

@@ -3,7 +3,7 @@
     <header class="app-header">
       <div class="header-content">
         <div class="header-left">
-          <h1>Welcome to Our Website</h1>
+          <h1>Welcome {{ getFullName(currentUser.firstName,currentUser.lastName) }}</h1>
         </div>
         <div class="header-right">
           <button @click="handleLogout" class="logout-btn">
@@ -13,23 +13,19 @@
         </div>
       </div>
     </header>
-    <div><h1>welcome</h1><h4>{{ currentUser.firstName || 'null'}} {{ currentUser.lastName ||'null' }} {{ currentUser.age||'null' }}</h4></div>
+    <div><h1>welcome</h1><h4>{{ currentUser.firstName}} {{currentUser.lastName }} </h4></div>
   </template>
   
   <script setup lang="ts">
-  import { auth } from '@/firebase';
-import { user } from '@/interfaces/user';
 import { useAuthStore } from '@/store/auth';
-import { useAuth } from '@/utilis/useAuth';
-import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import {getFullName} from '../Global';
 const router = useRouter();
-// const { logout } = useAuth();
 const authStore = useAuthStore();
  const {currentUser,logout}= authStore
   const handleLogout = async () => {
     try {
-      await authStore.logout();
+      await logout();
       router.push('/');
     } catch (error) {
       console.error('Logout failed:', error);

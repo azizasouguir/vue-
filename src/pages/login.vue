@@ -41,76 +41,57 @@
 </template>
 
 <script setup lang="ts">
-// import { auth } from "@/firebase";
 import { user } from "@/interfaces/user";
 import router from "@/router";
 import { useAuthStore } from "@/store/auth";
-// import { showAlert } from "@/utilis/alert";
-// import { signInWithEmailAndPassword } from "firebase/auth";
+import { showAlert } from "@/utilis/alert";
 const authStore = useAuthStore();
 const signIn = async () => {
   try {
     await authStore.login(user.value.email,user.value.password);
   } catch (error) {
-    console.error('Login failed:', error);
+    switch (error.code) {
+        case "auth/invalid-email":
+          showAlert({
+            title: "Oops...",
+            icon: "error",
+            text: "'Invalid email'.",
+            confirmButtonText: "ok",
+          });
+
+          break;
+        case "auth/user-not-found":
+          showAlert({
+            title: "Oops...",
+            icon: "error",
+            text: "No account with that email was found",
+            confirmButtonText: "ok",
+          });
+
+          break;
+        case "auth/wrong-password":
+          showAlert({
+            title: "Oops...",
+            icon: "error",
+            text: "Incorrect password",
+            confirmButtonText: "ok",
+          });
+
+          break;
+        default:
+          showAlert({
+            title: "Oops...",
+            icon: "error",
+            text: "Email or password was incorrect",
+            confirmButtonText: "ok",
+          });
+
+          break;
+      }
+    
   }
 };
-// const signIn = async () => {
-//   // we also renamed this method
-//   signInWithEmailAndPassword(auth, user.value.email, user.value.password) // THIS LINE CHANGED
-//     .then(async (data) => {
-//       console.log("🚀 ~ .then ~ data******:", data.user);
-//       // Get the ID token
-//       const idToken = await data.user.getIdToken();
-//       const refreshToken = data.user.refreshToken;
 
-//       // Store tokens (choose one method below)
-//       localStorage.setItem("idToken", idToken);
-//       localStorage.setItem("refreshToken", refreshToken);
-//       router.push("/home");
-//     })
-//     .catch((error) => {
-//       console.log(error.code);
-//       switch (error.code) {
-//         case "auth/invalid-email":
-//           showAlert({
-//             title: "Oops...",
-//             icon: "error",
-//             text: "'Invalid email'.",
-//             confirmButtonText: "ok",
-//           });
-
-//           break;
-//         case "auth/user-not-found":
-//           showAlert({
-//             title: "Oops...",
-//             icon: "error",
-//             text: "No account with that email was found",
-//             confirmButtonText: "ok",
-//           });
-
-//           break;
-//         case "auth/wrong-password":
-//           showAlert({
-//             title: "Oops...",
-//             icon: "error",
-//             text: "Incorrect password",
-//             confirmButtonText: "ok",
-//           });
-
-//           break;
-//         default:
-//           showAlert({
-//             title: "Oops...",
-//             icon: "error",
-//             text: "Email or password was incorrect",
-//             confirmButtonText: "ok",
-//           });
-
-//           break;
-//       }
-//     });
-// };
 const goToRegister = () => {
   router.push("/register");
 };

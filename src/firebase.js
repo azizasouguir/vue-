@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, initializeAuth } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import {
   APIKEY,
   APPID,
@@ -11,7 +11,6 @@ import {
   STORAGEBUCKET,
 } from "./GlobalConstant";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 const firebaseConfig = {
   apiKey: APIKEY,
   authDomain: AUTHDOMAIN,
