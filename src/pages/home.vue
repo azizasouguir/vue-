@@ -1,5 +1,6 @@
 <template>
    <Header />
+   <h1>welcome</h1>
 </template>
 
 <script setup lang="ts">

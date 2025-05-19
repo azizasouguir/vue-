@@ -10,15 +10,10 @@
       <div class="header-right">
 
         <font-awesome-icon icon="fa-solid fa-arrow-right-from-bracket" @click="handleLogout" size="2xl" style="color: #B197FC;" />
-        <font-awesome-icon icon="fa-solid fa-circle-user" size="2xl" style="color: #B197FC;" />
+        <font-awesome-icon icon="fa-solid fa-circle-user" @click="navigateToProfile" size="2xl" style="color: #B197FC;" />
       </div>
     </div>
   </header>
-  <div>
-    <h1>welcome</h1>
-    <h4>{{ currentUser.firstName }} {{ currentUser.lastName }}</h4>
-  </div>
-
 </template>
 
 <script setup lang="ts">
@@ -37,6 +32,9 @@ const handleLogout = async () => {
     alert("Logout failed. Please try again.");
   }
 };
+const navigateToProfile=()=>{
+     router.push("/profile");
+}
 </script>
 
 <style scoped>
@@ -68,7 +66,7 @@ const handleLogout = async () => {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
  
 }
 .logout-btn {
